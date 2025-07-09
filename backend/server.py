@@ -19,7 +19,15 @@ from pymongo import MongoClient
 import uvicorn
 
 # Import the automation module
-from backend.automation import automation
+# Check if we're in a headless environment
+try:
+    # Try to import the real automation module
+    from backend.automation import automation
+    print("Using real automation module")
+except Exception as e:
+    # Fall back to mock automation in headless environments
+    print(f"Using mock automation module due to: {e}")
+    from backend.mock_automation import automation
 
 # Initialize FastAPI app
 app = FastAPI(title="Jarvis AI Assistant", version="1.0.0")
