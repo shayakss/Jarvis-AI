@@ -4,8 +4,10 @@ import subprocess
 import platform
 import tempfile
 import uuid
+import time
+import threading
 from typing import Dict, List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 import asyncio
 from pathlib import Path
 
@@ -13,7 +15,6 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
-import openai
 from pymongo import MongoClient
 import uvicorn
 
@@ -36,17 +37,30 @@ try:
     db = client.jarvis_ai
     commands_collection = db.commands
     history_collection = db.command_history
+    batch_collection = db.batch_commands
+    automation_collection = db.automation_tasks
     print(f"Connected to MongoDB at {mongo_url}")
 except Exception as e:
     print(f"MongoDB connection failed: {e}")
+
+# Global task scheduler
+scheduled_tasks = {}
 
 # Pydantic models
 class CommandRequest(BaseModel):
     command: str
     user_id: str = "default"
 
-class VoiceTranscriptionRequest(BaseModel):
-    audio_data: str
+class BatchCommandRequest(BaseModel):
+    commands: List[str]
+    name: str = "Batch Command"
+    user_id: str = "default"
+
+class AutomationTaskRequest(BaseModel):
+    name: str
+    commands: List[str]
+    schedule_type: str = "manual"  # manual, interval, daily, weekly
+    interval_seconds: int = 60
     user_id: str = "default"
 
 class CommandExecutionRequest(BaseModel):
@@ -54,54 +68,101 @@ class CommandExecutionRequest(BaseModel):
     user_id: str = "default"
     confirm: bool = False
 
-# Safe command whitelist for Windows
+# Safe command whitelist for Windows/Linux
 SAFE_WINDOWS_COMMANDS = {
     # File management
     'dir': 'dir',
-    'ls': 'dir',
-    'list': 'dir',
+    'ls': 'ls -la',
+    'list': 'ls -la',
     'mkdir': 'mkdir',
     'create_folder': 'mkdir',
-    'copy': 'copy',
-    'move': 'move',
-    'del': 'del',
-    'delete': 'del',
-    'remove': 'del',
+    'copy': 'cp',
+    'move': 'mv',
+    'del': 'rm',
+    'delete': 'rm',
+    'remove': 'rm',
     'cd': 'cd',
     'change_directory': 'cd',
+    'pwd': 'pwd',
+    'current_directory': 'pwd',
     
     # System info
-    'systeminfo': 'systeminfo',
-    'system_info': 'systeminfo',
-    'tasklist': 'tasklist',
-    'processes': 'tasklist',
-    'ipconfig': 'ipconfig',
-    'network_info': 'ipconfig',
+    'systeminfo': 'uname -a',
+    'system_info': 'uname -a',
+    'tasklist': 'ps aux',
+    'processes': 'ps aux',
+    'ipconfig': 'ifconfig',
+    'network_info': 'ifconfig',
     'date': 'date',
-    'time': 'time',
+    'time': 'date',
     'whoami': 'whoami',
     'hostname': 'hostname',
+    'uptime': 'uptime',
+    'memory': 'free -h',
+    'disk': 'df -h',
+    'cpu': 'top -bn1 | head -10',
     
     # App launching
-    'notepad': 'notepad',
-    'calculator': 'calc',
-    'calc': 'calc',
-    'explorer': 'explorer',
-    'file_explorer': 'explorer',
-    'cmd': 'cmd',
-    'command_prompt': 'cmd',
-    'powershell': 'powershell',
+    'notepad': 'nano',
+    'calculator': 'bc',
+    'calc': 'bc',
+    'explorer': 'ls -la',
+    'file_explorer': 'ls -la',
+    'cmd': 'bash',
+    'command_prompt': 'bash',
+    'powershell': 'bash',
     
     # Basic utilities
     'echo': 'echo',
-    'ping': 'ping',
+    'ping': 'ping -c 4',
     'help': 'help',
-    'cls': 'cls',
-    'clear': 'cls',
+    'cls': 'clear',
+    'clear': 'clear',
     'tree': 'tree',
-    'vol': 'vol',
-    'type': 'type',
     'find': 'find',
+    'grep': 'grep',
+    'cat': 'cat',
+    'head': 'head',
+    'tail': 'tail',
+    'which': 'which',
+    'history': 'history',
+    'env': 'env',
+    'path': 'echo $PATH',
+}
+
+# Automation command templates
+AUTOMATION_TEMPLATES = {
+    'system_health': [
+        'date',
+        'uptime',
+        'memory',
+        'disk',
+        'processes'
+    ],
+    'network_check': [
+        'hostname',
+        'network_info',
+        'ping google.com'
+    ],
+    'file_cleanup': [
+        'pwd',
+        'ls -la',
+        'find . -name "*.tmp"',
+        'find . -name "*.log"'
+    ],
+    'development_setup': [
+        'pwd',
+        'ls -la',
+        'which python',
+        'which node',
+        'which git'
+    ],
+    'security_audit': [
+        'whoami',
+        'groups',
+        'ps aux',
+        'netstat -an'
+    ]
 }
 
 # Dangerous command patterns to block
@@ -110,7 +171,9 @@ DANGEROUS_PATTERNS = [
     'net user', 'net localgroup', 'reg delete', 'reg add', 'sfc',
     'dism', 'bcdedit', 'diskpart', 'wmic', 'sc delete', 'sc create',
     'taskkill /f', 'del /f /q', 'rd /s /q', 'attrib +h +s +r',
-    'cipher', 'icacls', 'takeown', 'runas', 'powershell -windowstyle hidden'
+    'cipher', 'icacls', 'takeown', 'runas', 'rm -rf /', 'chmod 777',
+    'sudo rm', 'mkfs', 'fdisk', 'parted', 'dd if=', 'fork bomb',
+    ':(){ :|:& };:', 'killall', 'reboot', 'halt', 'poweroff'
 ]
 
 def is_command_safe(command: str) -> tuple[bool, str]:
@@ -124,7 +187,15 @@ def is_command_safe(command: str) -> tuple[bool, str]:
     
     # Check if command starts with a safe command
     first_word = command_lower.split()[0] if command_lower.split() else ""
-    if first_word not in SAFE_WINDOWS_COMMANDS:
+    
+    # Allow basic Linux commands that are generally safe
+    safe_first_words = list(SAFE_WINDOWS_COMMANDS.keys()) + [
+        'ls', 'cat', 'head', 'tail', 'grep', 'find', 'which', 'echo',
+        'date', 'whoami', 'hostname', 'pwd', 'uname', 'uptime', 'free',
+        'df', 'ps', 'top', 'history', 'env', 'ping', 'ifconfig', 'netstat'
+    ]
+    
+    if first_word not in safe_first_words:
         return False, f"Command '{first_word}' not in safe command whitelist"
     
     return True, "Command is safe"
@@ -178,8 +249,119 @@ def execute_system_command(command: str) -> Dict:
             "timestamp": datetime.now().isoformat()
         }
 
+def mock_interpret_command(natural_language: str) -> Dict:
+    """Mock AI interpretation for common commands when OpenAI is not available"""
+    nl_lower = natural_language.lower().strip()
+    
+    # Common command mappings
+    interpretations = {
+        'show me the files': 'ls -la',
+        'list files': 'ls -la',
+        'show files': 'ls -la',
+        'what files are here': 'ls -la',
+        'list directory': 'ls -la',
+        'show directory': 'ls -la',
+        
+        'what time is it': 'date',
+        'current time': 'date',
+        'show time': 'date',
+        'time': 'date',
+        'date': 'date',
+        
+        'who am i': 'whoami',
+        'current user': 'whoami',
+        'show user': 'whoami',
+        
+        'where am i': 'pwd',
+        'current directory': 'pwd',
+        'show current directory': 'pwd',
+        'working directory': 'pwd',
+        
+        'system info': 'uname -a',
+        'system information': 'uname -a',
+        'show system info': 'uname -a',
+        
+        'show processes': 'ps aux',
+        'running processes': 'ps aux',
+        'list processes': 'ps aux',
+        'tasks': 'ps aux',
+        
+        'network info': 'ifconfig',
+        'network information': 'ifconfig',
+        'show network': 'ifconfig',
+        'ip address': 'ifconfig',
+        
+        'disk space': 'df -h',
+        'disk usage': 'df -h',
+        'show disk': 'df -h',
+        'free space': 'df -h',
+        
+        'memory usage': 'free -h',
+        'memory info': 'free -h',
+        'show memory': 'free -h',
+        'ram usage': 'free -h',
+        
+        'system uptime': 'uptime',
+        'uptime': 'uptime',
+        'how long running': 'uptime',
+        
+        'clear screen': 'clear',
+        'clear': 'clear',
+        'cls': 'clear',
+        
+        'ping google': 'ping -c 4 google.com',
+        'test internet': 'ping -c 4 google.com',
+        'check connection': 'ping -c 4 google.com',
+    }
+    
+    # Direct mapping
+    if nl_lower in interpretations:
+        command = interpretations[nl_lower]
+        return {
+            "success": True,
+            "command": command,
+            "interpretation": natural_language,
+            "safety_message": "Command is safe",
+            "timestamp": datetime.now().isoformat(),
+            "method": "mock_ai"
+        }
+    
+    # Pattern matching
+    for pattern, command in interpretations.items():
+        if pattern in nl_lower:
+            return {
+                "success": True,
+                "command": command,
+                "interpretation": natural_language,
+                "safety_message": "Command is safe",
+                "timestamp": datetime.now().isoformat(),
+                "method": "mock_ai"
+            }
+    
+    # If no match found, try to extract command-like words
+    words = nl_lower.split()
+    for word in words:
+        if word in SAFE_WINDOWS_COMMANDS:
+            return {
+                "success": True,
+                "command": SAFE_WINDOWS_COMMANDS[word],
+                "interpretation": natural_language,
+                "safety_message": "Command is safe",
+                "timestamp": datetime.now().isoformat(),
+                "method": "mock_ai"
+            }
+    
+    return {
+        "success": False,
+        "command": "",
+        "interpretation": natural_language,
+        "error": "Could not interpret command. Try: 'show me the files', 'what time is it', 'who am i', etc.",
+        "timestamp": datetime.now().isoformat(),
+        "method": "mock_ai"
+    }
+
 def interpret_natural_language_to_command(natural_language: str) -> Dict:
-    """Use GPT-4 to convert natural language to Windows commands"""
+    """Use GPT or mock AI to convert natural language to commands"""
     try:
         from openai import OpenAI
         
@@ -187,25 +369,24 @@ def interpret_natural_language_to_command(natural_language: str) -> Dict:
             api_key=os.environ.get('OPENAI_API_KEY', 'sk-svcacct-xgoMM56QqYTdn0kcH46aT3BlbkFJJ5dEMVrwoNjH2IgkGIfA')
         )
         
-        system_prompt = """You are Jarvis, an AI assistant that converts natural language to Windows command line commands.
+        system_prompt = """You are Jarvis, an AI assistant that converts natural language to command line commands.
 
 IMPORTANT RULES:
-1. Only return Windows CMD commands that are SAFE and from this whitelist: dir, mkdir, copy, move, del, cd, systeminfo, tasklist, ipconfig, date, time, whoami, hostname, notepad, calc, explorer, cmd, powershell, echo, ping, help, cls, tree, vol, type, find
+1. Only return commands that are SAFE and from this whitelist: ls, dir, mkdir, cp, mv, rm, cd, pwd, uname, ps, ifconfig, date, whoami, hostname, uptime, free, df, top, echo, ping, help, clear, tree, find, grep, cat, head, tail, which, history, env
 2. Never return commands that could harm the system or access sensitive data
 3. If the request is unclear or unsafe, ask for clarification
 4. Return only the command, no explanation unless clarification is needed
-5. For file operations, use Windows path syntax (backslashes)
-6. For app launching, use simple executable names
+5. Use Linux command syntax (forward slashes, appropriate flags)
 
 Examples:
-- "show me the files" → "dir"
-- "create a folder called test" → "mkdir test"
-- "open notepad" → "notepad"
-- "what's my IP address" → "ipconfig"
-- "show running processes" → "tasklist"
-- "clear the screen" → "cls"
-- "open file explorer" → "explorer"
-- "what time is it" → "time"
+- "show me the files" → "ls -la"
+- "what time is it" → "date"
+- "who am i" → "whoami"
+- "system info" → "uname -a"
+- "show processes" → "ps aux"
+- "clear screen" → "clear"
+- "disk usage" → "df -h"
+- "memory usage" → "free -h"
 
 User request: """ + natural_language
 
@@ -229,17 +410,14 @@ User request: """ + natural_language
             "command": command if is_safe else "",
             "interpretation": natural_language,
             "safety_message": safety_message,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "method": "openai"
         }
         
     except Exception as e:
-        return {
-            "success": False,
-            "command": "",
-            "interpretation": natural_language,
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
+        # Fall back to mock AI if OpenAI fails
+        print(f"OpenAI failed, using mock AI: {e}")
+        return mock_interpret_command(natural_language)
 
 @app.get("/api/")
 async def root():
@@ -251,7 +429,13 @@ async def health_check():
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
         "platform": platform.system(),
-        "python_version": platform.python_version()
+        "python_version": platform.python_version(),
+        "features": {
+            "command_execution": True,
+            "batch_commands": True,
+            "automation": True,
+            "ai_interpretation": True
+        }
     }
 
 @app.post("/api/transcribe-voice")
@@ -307,6 +491,7 @@ async def interpret_command(request: CommandExecutionRequest):
             "natural_language": request.natural_language,
             "interpreted_command": result.get("command", ""),
             "success": result["success"],
+            "method": result.get("method", "unknown"),
             "timestamp": datetime.now().isoformat()
         }
         
@@ -355,6 +540,57 @@ async def execute_command(request: CommandRequest):
             "timestamp": datetime.now().isoformat()
         }
 
+@app.post("/api/batch-execute")
+async def batch_execute(request: BatchCommandRequest):
+    """Execute multiple commands in batch"""
+    try:
+        results = []
+        total_success = 0
+        
+        for i, command in enumerate(request.commands):
+            print(f"Executing batch command {i+1}/{len(request.commands)}: {command}")
+            result = execute_system_command(command)
+            results.append(result)
+            
+            if result["success"]:
+                total_success += 1
+            
+            # Add a small delay between commands
+            await asyncio.sleep(0.1)
+        
+        # Store batch execution in database
+        batch_doc = {
+            "id": str(uuid.uuid4()),
+            "user_id": request.user_id,
+            "name": request.name,
+            "commands": request.commands,
+            "results": results,
+            "total_commands": len(request.commands),
+            "successful_commands": total_success,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        try:
+            batch_collection.insert_one(batch_doc)
+        except Exception as db_error:
+            print(f"Database error: {db_error}")
+        
+        return {
+            "success": True,
+            "batch_name": request.name,
+            "total_commands": len(request.commands),
+            "successful_commands": total_success,
+            "results": results,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
 @app.post("/api/voice-command")
 async def voice_command(request: CommandExecutionRequest):
     """Complete voice command pipeline: interpret + execute"""
@@ -384,6 +620,7 @@ async def voice_command(request: CommandExecutionRequest):
                 "interpreted_command": command,
                 "output": execution.get("output", ""),
                 "error": execution.get("error", ""),
+                "method": interpretation.get("method", "unknown"),
                 "timestamp": datetime.now().isoformat()
             }
         else:
@@ -420,6 +657,70 @@ async def get_command_history(user_id: str = "default", limit: int = 50):
             "count": len(history),
             "timestamp": datetime.now().isoformat()
         }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.get("/api/batch-history")
+async def get_batch_history(user_id: str = "default", limit: int = 20):
+    """Get batch execution history"""
+    try:
+        history = list(
+            batch_collection.find(
+                {"user_id": user_id},
+                {"_id": 0}
+            ).sort("timestamp", -1).limit(limit)
+        )
+        
+        return {
+            "success": True,
+            "history": history,
+            "count": len(history),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.get("/api/automation-templates")
+async def get_automation_templates():
+    """Get automation command templates"""
+    return {
+        "success": True,
+        "templates": AUTOMATION_TEMPLATES,
+        "template_count": len(AUTOMATION_TEMPLATES),
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.post("/api/execute-template")
+async def execute_template(template_name: str, user_id: str = "default"):
+    """Execute an automation template"""
+    try:
+        if template_name not in AUTOMATION_TEMPLATES:
+            return {
+                "success": False,
+                "error": f"Template '{template_name}' not found",
+                "timestamp": datetime.now().isoformat()
+            }
+        
+        commands = AUTOMATION_TEMPLATES[template_name]
+        
+        # Execute as batch
+        batch_request = BatchCommandRequest(
+            commands=commands,
+            name=f"Template: {template_name}",
+            user_id=user_id
+        )
+        
+        return await batch_execute(batch_request)
         
     except Exception as e:
         return {
