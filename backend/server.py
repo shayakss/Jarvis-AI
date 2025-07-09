@@ -184,6 +184,12 @@ def execute_system_command(command: str) -> Dict:
 def interpret_natural_language_to_command(natural_language: str) -> Dict:
     """Use GPT-4 to convert natural language to Windows commands"""
     try:
+        from openai import OpenAI
+        
+        client = OpenAI(
+            api_key=os.environ.get('OPENAI_API_KEY', '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')
+        )
+        
         system_prompt = """You are Jarvis, an AI assistant that converts natural language to Windows command line commands.
 
 IMPORTANT RULES:
@@ -206,7 +212,7 @@ Examples:
 
 User request: """ + natural_language
 
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": system_prompt},
