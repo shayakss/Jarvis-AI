@@ -261,6 +261,12 @@ async def health_check():
 async def transcribe_voice(file: UploadFile = File(...)):
     """Transcribe voice using OpenAI Whisper"""
     try:
+        from openai import OpenAI
+        
+        client = OpenAI(
+            api_key=os.environ.get('OPENAI_API_KEY', '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')
+        )
+        
         # Save uploaded file temporarily
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
             content = await file.read()
@@ -269,7 +275,7 @@ async def transcribe_voice(file: UploadFile = File(...)):
         
         # Transcribe using OpenAI Whisper
         with open(tmp_file_path, "rb") as audio_file:
-            transcript = openai.Audio.transcribe(
+            transcript = client.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file,
                 response_format="text"
