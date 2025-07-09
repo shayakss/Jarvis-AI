@@ -47,6 +47,8 @@ const App = () => {
     loadCommandHistory();
     loadBatchHistory();
     loadAutomationTemplates();
+    loadAutomationStatus();
+    loadWindowList();
     
     return () => {
       if (animationFrameRef.current) {
