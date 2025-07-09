@@ -116,6 +116,31 @@ const App = () => {
     }
   };
 
+  const loadAutomationStatus = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/automation/status`);
+      const data = await response.json();
+      if (data.success) {
+        setAutomationStatus(data);
+        setIsWakeWordActive(data.wake_word_active);
+      }
+    } catch (error) {
+      console.error('Failed to load automation status:', error);
+    }
+  };
+
+  const loadWindowList = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/automation/windows`);
+      const data = await response.json();
+      if (data.success) {
+        setWindowList(data.windows);
+      }
+    } catch (error) {
+      console.error('Failed to load window list:', error);
+    }
+  };
+
   const startVoiceRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
