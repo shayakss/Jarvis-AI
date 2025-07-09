@@ -18,6 +18,9 @@ from pydantic import BaseModel
 from pymongo import MongoClient
 import uvicorn
 
+# Import the automation module
+from automation import automation
+
 # Initialize FastAPI app
 app = FastAPI(title="Jarvis AI Assistant", version="1.0.0")
 
