@@ -787,6 +787,283 @@ async def get_safe_commands():
         "timestamp": datetime.now().isoformat()
     }
 
+# ============================================
+# SCREEN AUTOMATION ENDPOINTS
+# ============================================
+
+@app.post("/api/automation/screenshot")
+async def take_screenshot(request: ScreenshotRequest):
+    """Take a screenshot of the screen or specific region"""
+    try:
+        region = request.region
+        if region:
+            region = (region.get('x'), region.get('y'), region.get('width'), region.get('height'))
+        
+        result = automation.take_screenshot(region=region, filename=request.filename)
+        return result
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.post("/api/automation/click")
+async def click_at_position(request: ClickRequest):
+    """Click at specific coordinates"""
+    try:
+        result = automation.click_at_position(
+            x=request.x,
+            y=request.y,
+            button=request.button,
+            double_click=request.double_click
+        )
+        return result
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.post("/api/automation/click-image")
+async def click_on_image(request: ClickImageRequest):
+    """Click on first occurrence of template image"""
+    try:
+        result = automation.click_on_image(
+            template_image=request.template_image,
+            confidence=request.confidence,
+            double_click=request.double_click
+        )
+        return result
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.post("/api/automation/type")
+async def type_text(request: TypeTextRequest):
+    """Type text with specified interval"""
+    try:
+        result = automation.type_text(
+            text=request.text,
+            interval=request.interval
+        )
+        return result
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.post("/api/automation/key")
+async def press_key(request: KeyPressRequest):
+    """Press key or key combination"""
+    try:
+        result = automation.press_key(request.key_combination)
+        return result
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.post("/api/automation/scroll")
+async def scroll_screen(request: ScrollRequest):
+    """Scroll in specified direction"""
+    try:
+        result = automation.scroll(
+            direction=request.direction,
+            amount=request.amount,
+            x=request.x,
+            y=request.y
+        )
+        return result
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.post("/api/automation/ocr")
+async def read_text_from_screen(request: OCRRequest):
+    """Extract text from screen using OCR"""
+    try:
+        region = request.region
+        if region:
+            region = (region.get('x'), region.get('y'), region.get('width'), region.get('height'))
+        
+        result = automation.read_text_from_screen(region=region, lang=request.lang)
+        return result
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.get("/api/automation/windows")
+async def get_window_list():
+    """Get list of all open windows"""
+    try:
+        result = automation.get_window_list()
+        return result
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.post("/api/automation/activate-window")
+async def activate_window(request: WindowRequest):
+    """Activate window by title"""
+    try:
+        result = automation.activate_window(request.window_title)
+        return result
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.post("/api/automation/wait-for-image")
+async def wait_for_image(request: WaitForImageRequest):
+    """Wait for image to appear on screen"""
+    try:
+        result = automation.wait_for_image(
+            template_image=request.template_image,
+            timeout=request.timeout,
+            confidence=request.confidence
+        )
+        return result
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.post("/api/automation/wake-word/start")
+async def start_wake_word_detection(request: WakeWordRequest):
+    """Start wake word detection"""
+    try:
+        result = automation.start_wake_word_detection(request.wake_word)
+        return result
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.post("/api/automation/wake-word/stop")
+async def stop_wake_word_detection():
+    """Stop wake word detection"""
+    try:
+        result = automation.stop_wake_word_detection()
+        return result
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.post("/api/automation/hotkey")
+async def setup_hotkey(request: HotkeyRequest):
+    """Setup global hotkey"""
+    try:
+        result = automation.setup_hotkey(request.key_combination, request.action)
+        return result
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.post("/api/automation/sequence")
+async def execute_automation_sequence(request: AutomationSequenceRequest):
+    """Execute a sequence of automation actions"""
+    try:
+        result = automation.execute_automation_sequence(request.sequence)
+        
+        # Store sequence execution in database
+        sequence_doc = {
+            "id": str(uuid.uuid4()),
+            "user_id": request.user_id,
+            "name": request.name,
+            "sequence": request.sequence,
+            "result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        try:
+            automation_collection.insert_one(sequence_doc)
+        except Exception as db_error:
+            print(f"Database error: {db_error}")
+        
+        return result
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.get("/api/automation/status")
+async def get_automation_status():
+    """Get automation system status"""
+    try:
+        return {
+            "success": True,
+            "status": "active",
+            "features": {
+                "screenshot": True,
+                "click_automation": True,
+                "image_recognition": True,
+                "ocr": True,
+                "window_management": True,
+                "wake_word": True,
+                "hotkeys": True,
+                "sequence_automation": True
+            },
+            "screen_size": {
+                "width": automation.screen_width,
+                "height": automation.screen_height
+            },
+            "wake_word_active": automation.wake_word_active,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8001))
     uvicorn.run(app, host="0.0.0.0", port=port)
