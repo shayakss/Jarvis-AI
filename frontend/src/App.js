@@ -1165,7 +1165,19 @@ const App = () => {
           className={`tab-btn ${activeTab === 'automation' ? 'active' : ''}`}
           onClick={() => setActiveTab('automation')}
         >
-          🤖 Automation
+          🤖 Templates
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'screen' ? 'active' : ''}`}
+          onClick={() => setActiveTab('screen')}
+        >
+          🖥️ Screen
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'advanced' ? 'active' : ''}`}
+          onClick={() => setActiveTab('advanced')}
+        >
+          🚀 Advanced
         </button>
       </div>
 
