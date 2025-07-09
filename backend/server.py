@@ -261,7 +261,7 @@ async def transcribe_voice(file: UploadFile = File(...)):
         from openai import OpenAI
         
         client = OpenAI(
-            api_key=os.environ.get('OPENAI_API_KEY', 'sk-ykdev-podcast-a25lvVpfRCo8iKZ5cMI9T3BlbkFJkCisrUMNCbGWbCOCPoB3')
+            api_key=os.environ.get('OPENAI_API_KEY', 'sk-svcacct-xgoMM56QqYTdn0kcH46aT3BlbkFJJ5dEMVrwoNjH2IgkGIfA')
         )
         
         # Save uploaded file temporarily
