@@ -40,9 +40,6 @@ try:
 except Exception as e:
     print(f"MongoDB connection failed: {e}")
 
-# OpenAI API configuration
-openai.api_key = os.environ.get('OPENAI_API_KEY', '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')
-
 # Pydantic models
 class CommandRequest(BaseModel):
     command: str
