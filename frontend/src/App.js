@@ -873,6 +873,261 @@ const App = () => {
     </div>
   );
 
+  const renderScreenAutomationTab = () => (
+    <div className="screen-automation-interface">
+      <div className="automation-controls">
+        <h3>🖥️ Screen Automation</h3>
+        
+        {/* Screenshot Section */}
+        <div className="automation-section">
+          <h4>📸 Screenshot</h4>
+          <div className="control-row">
+            <button onClick={takeScreenshot} disabled={isProcessing} className="automation-btn">
+              Take Screenshot
+            </button>
+          </div>
+          {screenshot && (
+            <div className="screenshot-preview">
+              <img src={`data:image/png;base64,${screenshot}`} alt="Screenshot" style={{maxWidth: '300px', maxHeight: '200px'}} />
+            </div>
+          )}
+        </div>
+
+        {/* Click Section */}
+        <div className="automation-section">
+          <h4>🖱️ Click Control</h4>
+          <div className="control-row">
+            <input
+              type="number"
+              value={coordinateX}
+              onChange={(e) => setCoordinateX(e.target.value)}
+              placeholder="X coordinate"
+              className="coordinate-input"
+            />
+            <input
+              type="number"
+              value={coordinateY}
+              onChange={(e) => setCoordinateY(e.target.value)}
+              placeholder="Y coordinate"
+              className="coordinate-input"
+            />
+            <button onClick={clickAtPosition} disabled={isProcessing} className="automation-btn">
+              Click
+            </button>
+          </div>
+        </div>
+
+        {/* Type Text Section */}
+        <div className="automation-section">
+          <h4>⌨️ Type Text</h4>
+          <div className="control-row">
+            <input
+              type="text"
+              value={textToType}
+              onChange={(e) => setTextToType(e.target.value)}
+              placeholder="Text to type"
+              className="text-input"
+            />
+            <button onClick={typeText} disabled={isProcessing} className="automation-btn">
+              Type
+            </button>
+          </div>
+        </div>
+
+        {/* Key Press Section */}
+        <div className="automation-section">
+          <h4>🔑 Key Press</h4>
+          <div className="control-row">
+            <input
+              type="text"
+              value={keyToPress}
+              onChange={(e) => setKeyToPress(e.target.value)}
+              placeholder="Key combination (e.g., ctrl+c, enter)"
+              className="text-input"
+            />
+            <button onClick={pressKey} disabled={isProcessing} className="automation-btn">
+              Press
+            </button>
+          </div>
+        </div>
+
+        {/* Scroll Section */}
+        <div className="automation-section">
+          <h4>📜 Scroll</h4>
+          <div className="control-row">
+            <select
+              value={scrollDirection}
+              onChange={(e) => setScrollDirection(e.target.value)}
+              className="scroll-select"
+            >
+              <option value="up">Up</option>
+              <option value="down">Down</option>
+              <option value="left">Left</option>
+              <option value="right">Right</option>
+            </select>
+            <input
+              type="number"
+              value={scrollAmount}
+              onChange={(e) => setScrollAmount(parseInt(e.target.value))}
+              min="1"
+              max="10"
+              className="scroll-amount"
+            />
+            <button onClick={scrollScreen} disabled={isProcessing} className="automation-btn">
+              Scroll
+            </button>
+          </div>
+        </div>
+
+        {/* OCR Section */}
+        <div className="automation-section">
+          <h4>👁️ OCR (Read Screen)</h4>
+          <div className="control-row">
+            <button onClick={performOCR} disabled={isProcessing} className="automation-btn">
+              Read Screen Text
+            </button>
+          </div>
+          {ocrResult && (
+            <div className="ocr-result">
+              <h5>Detected Text:</h5>
+              <pre>{ocrResult}</pre>
+            </div>
+          )}
+        </div>
+
+        {/* Window Management Section */}
+        <div className="automation-section">
+          <h4>🪟 Window Management</h4>
+          <div className="control-row">
+            <select
+              value={selectedWindow}
+              onChange={(e) => setSelectedWindow(e.target.value)}
+              className="window-select"
+            >
+              <option value="">Select Window</option>
+              {windowList.map((window, index) => (
+                <option key={index} value={window.title}>
+                  {window.title}
+                </option>
+              ))}
+            </select>
+            <button onClick={activateWindow} disabled={isProcessing} className="automation-btn">
+              Activate
+            </button>
+            <button onClick={loadWindowList} disabled={isProcessing} className="automation-btn">
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        {/* Wake Word Section */}
+        <div className="automation-section">
+          <h4>🎤 Wake Word</h4>
+          <div className="control-row">
+            <span className={`wake-word-status ${isWakeWordActive ? 'active' : 'inactive'}`}>
+              Status: {isWakeWordActive ? 'Active' : 'Inactive'}
+            </span>
+            <button onClick={toggleWakeWord} disabled={isProcessing} className="automation-btn">
+              {isWakeWordActive ? 'Stop' : 'Start'} Wake Word
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderAdvancedAutomationTab = () => (
+    <div className="advanced-automation-interface">
+      <div className="automation-controls">
+        <h3>🚀 Advanced Automation</h3>
+        
+        {/* Automation Status */}
+        <div className="automation-section">
+          <h4>📊 System Status</h4>
+          <div className="status-grid">
+            <div className="status-item">
+              <span>Screen Size:</span>
+              <span>{automationStatus.screen_size?.width}x{automationStatus.screen_size?.height}</span>
+            </div>
+            <div className="status-item">
+              <span>Screenshot:</span>
+              <span className={automationStatus.features?.screenshot ? 'status-active' : 'status-inactive'}>
+                {automationStatus.features?.screenshot ? '✅' : '❌'}
+              </span>
+            </div>
+            <div className="status-item">
+              <span>Click Automation:</span>
+              <span className={automationStatus.features?.click_automation ? 'status-active' : 'status-inactive'}>
+                {automationStatus.features?.click_automation ? '✅' : '❌'}
+              </span>
+            </div>
+            <div className="status-item">
+              <span>Image Recognition:</span>
+              <span className={automationStatus.features?.image_recognition ? 'status-active' : 'status-inactive'}>
+                {automationStatus.features?.image_recognition ? '✅' : '❌'}
+              </span>
+            </div>
+            <div className="status-item">
+              <span>OCR:</span>
+              <span className={automationStatus.features?.ocr ? 'status-active' : 'status-inactive'}>
+                {automationStatus.features?.ocr ? '✅' : '❌'}
+              </span>
+            </div>
+            <div className="status-item">
+              <span>Wake Word:</span>
+              <span className={automationStatus.features?.wake_word ? 'status-active' : 'status-inactive'}>
+                {automationStatus.features?.wake_word ? '✅' : '❌'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Sequence Builder */}
+        <div className="automation-section">
+          <h4>📝 Automation Sequence Builder</h4>
+          <div className="sequence-builder">
+            <p>Feature coming soon - Build complex automation sequences</p>
+            <button onClick={executeAutomationSequence} disabled={isProcessing || automationSequence.length === 0} className="automation-btn">
+              Execute Sequence
+            </button>
+          </div>
+        </div>
+
+        {/* Browser Automation */}
+        <div className="automation-section">
+          <h4>🌐 Browser Automation</h4>
+          <div className="browser-controls">
+            <button onClick={() => activateWindow('Chrome')} disabled={isProcessing} className="automation-btn">
+              Activate Chrome
+            </button>
+            <button onClick={() => activateWindow('Firefox')} disabled={isProcessing} className="automation-btn">
+              Activate Firefox
+            </button>
+            <button onClick={() => activateWindow('Edge')} disabled={isProcessing} className="automation-btn">
+              Activate Edge
+            </button>
+          </div>
+        </div>
+
+        {/* Desktop App Automation */}
+        <div className="automation-section">
+          <h4>🖥️ Desktop App Automation</h4>
+          <div className="desktop-controls">
+            <button onClick={() => activateWindow('Notepad')} disabled={isProcessing} className="automation-btn">
+              Activate Notepad
+            </button>
+            <button onClick={() => activateWindow('Calculator')} disabled={isProcessing} className="automation-btn">
+              Activate Calculator
+            </button>
+            <button onClick={() => activateWindow('File Explorer')} disabled={isProcessing} className="automation-btn">
+              Activate Explorer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="jarvis-container">
       {/* Header */}
