@@ -17,6 +17,21 @@ const App = () => {
   const [batchCommands, setBatchCommands] = useState(['']);
   const [batchName, setBatchName] = useState('');
   
+  // Automation state
+  const [automationStatus, setAutomationStatus] = useState({});
+  const [screenshot, setScreenshot] = useState(null);
+  const [windowList, setWindowList] = useState([]);
+  const [ocrResult, setOcrResult] = useState('');
+  const [isWakeWordActive, setIsWakeWordActive] = useState(false);
+  const [automationSequence, setAutomationSequence] = useState([]);
+  const [coordinateX, setCoordinateX] = useState('');
+  const [coordinateY, setCoordinateY] = useState('');
+  const [textToType, setTextToType] = useState('');
+  const [keyToPress, setKeyToPress] = useState('');
+  const [scrollDirection, setScrollDirection] = useState('up');
+  const [scrollAmount, setScrollAmount] = useState(3);
+  const [selectedWindow, setSelectedWindow] = useState('');
+  
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const audioContextRef = useRef(null);
