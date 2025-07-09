@@ -59,12 +59,57 @@ class BatchCommandRequest(BaseModel):
     name: str = "Batch Command"
     user_id: str = "default"
 
-class AutomationTaskRequest(BaseModel):
-    name: str
-    commands: List[str]
-    schedule_type: str = "manual"  # manual, interval, daily, weekly
-    interval_seconds: int = 60
+class AutomationSequenceRequest(BaseModel):
+    sequence: List[Dict]
+    name: str = "Automation Sequence"
     user_id: str = "default"
+
+class ScreenshotRequest(BaseModel):
+    region: Optional[Dict] = None
+    filename: Optional[str] = None
+
+class ClickRequest(BaseModel):
+    x: int
+    y: int
+    button: str = "left"
+    double_click: bool = False
+
+class ClickImageRequest(BaseModel):
+    template_image: str  # Base64 encoded image or file path
+    confidence: float = 0.8
+    double_click: bool = False
+
+class TypeTextRequest(BaseModel):
+    text: str
+    interval: float = 0.01
+
+class KeyPressRequest(BaseModel):
+    key_combination: str
+
+class ScrollRequest(BaseModel):
+    direction: str
+    amount: int = 3
+    x: Optional[int] = None
+    y: Optional[int] = None
+
+class OCRRequest(BaseModel):
+    region: Optional[Dict] = None
+    lang: str = "eng"
+
+class WindowRequest(BaseModel):
+    window_title: str
+
+class WaitForImageRequest(BaseModel):
+    template_image: str
+    timeout: int = 10
+    confidence: float = 0.8
+
+class HotkeyRequest(BaseModel):
+    key_combination: str
+    action: str
+
+class WakeWordRequest(BaseModel):
+    wake_word: str = "jarvis"
 
 class CommandExecutionRequest(BaseModel):
     natural_language: str
