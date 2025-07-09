@@ -465,6 +465,271 @@ const App = () => {
     setOutput('');
   };
 
+  // ============================================
+  // AUTOMATION FUNCTIONS
+  // ============================================
+
+  const takeScreenshot = async () => {
+    try {
+      setIsProcessing(true);
+      const response = await fetch(`${BACKEND_URL}/api/automation/screenshot`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({})
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setScreenshot(data.image_base64);
+        setOutput(`Screenshot taken: ${data.filename} (${data.size[0]}x${data.size[1]})`);
+      } else {
+        setOutput(`Screenshot failed: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Screenshot error:', error);
+      setOutput('Screenshot failed: Network error');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const clickAtPosition = async () => {
+    if (!coordinateX || !coordinateY) return;
+    
+    try {
+      setIsProcessing(true);
+      const response = await fetch(`${BACKEND_URL}/api/automation/click`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          x: parseInt(coordinateX),
+          y: parseInt(coordinateY),
+          button: 'left'
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setOutput(`Clicked at position (${data.position.x}, ${data.position.y})`);
+      } else {
+        setOutput(`Click failed: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Click error:', error);
+      setOutput('Click failed: Network error');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const typeText = async () => {
+    if (!textToType) return;
+    
+    try {
+      setIsProcessing(true);
+      const response = await fetch(`${BACKEND_URL}/api/automation/type`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: textToType,
+          interval: 0.01
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setOutput(`Typed text: "${data.text}" (${data.character_count} characters)`);
+      } else {
+        setOutput(`Type failed: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Type error:', error);
+      setOutput('Type failed: Network error');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const pressKey = async () => {
+    if (!keyToPress) return;
+    
+    try {
+      setIsProcessing(true);
+      const response = await fetch(`${BACKEND_URL}/api/automation/key`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          key_combination: keyToPress
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setOutput(`Pressed key: ${data.key_combination}`);
+      } else {
+        setOutput(`Key press failed: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Key press error:', error);
+      setOutput('Key press failed: Network error');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const scrollScreen = async () => {
+    try {
+      setIsProcessing(true);
+      const response = await fetch(`${BACKEND_URL}/api/automation/scroll`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          direction: scrollDirection,
+          amount: scrollAmount
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setOutput(`Scrolled ${data.direction} by ${data.amount} units`);
+      } else {
+        setOutput(`Scroll failed: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Scroll error:', error);
+      setOutput('Scroll failed: Network error');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const performOCR = async () => {
+    try {
+      setIsProcessing(true);
+      const response = await fetch(`${BACKEND_URL}/api/automation/ocr`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          lang: 'eng'
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setOcrResult(data.text);
+        setOutput(`OCR completed: Found ${data.word_count} words`);
+      } else {
+        setOutput(`OCR failed: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('OCR error:', error);
+      setOutput('OCR failed: Network error');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const activateWindow = async () => {
+    if (!selectedWindow) return;
+    
+    try {
+      setIsProcessing(true);
+      const response = await fetch(`${BACKEND_URL}/api/automation/activate-window`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          window_title: selectedWindow
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setOutput(`Activated window: ${data.window_title}`);
+      } else {
+        setOutput(`Window activation failed: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Window activation error:', error);
+      setOutput('Window activation failed: Network error');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const toggleWakeWord = async () => {
+    try {
+      setIsProcessing(true);
+      const endpoint = isWakeWordActive ? '/api/automation/wake-word/stop' : '/api/automation/wake-word/start';
+      const method = 'POST';
+      const body = isWakeWordActive ? {} : { wake_word: 'jarvis' };
+      
+      const response = await fetch(`${BACKEND_URL}${endpoint}`, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body)
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setIsWakeWordActive(!isWakeWordActive);
+        setOutput(`Wake word detection ${isWakeWordActive ? 'stopped' : 'started'}`);
+      } else {
+        setOutput(`Wake word toggle failed: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Wake word toggle error:', error);
+      setOutput('Wake word toggle failed: Network error');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const executeAutomationSequence = async () => {
+    if (automationSequence.length === 0) return;
+    
+    try {
+      setIsProcessing(true);
+      const response = await fetch(`${BACKEND_URL}/api/automation/sequence`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sequence: automationSequence,
+          name: 'Custom Sequence'
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setOutput(`Sequence completed: ${data.successful_actions}/${data.total_actions} actions successful`);
+      } else {
+        setOutput(`Sequence failed: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Sequence error:', error);
+      setOutput('Sequence failed: Network error');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const addBatchCommand = () => {
     setBatchCommands([...batchCommands, '']);
   };
