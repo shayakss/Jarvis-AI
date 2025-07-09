@@ -184,7 +184,7 @@ def interpret_natural_language_to_command(natural_language: str) -> Dict:
         from openai import OpenAI
         
         client = OpenAI(
-            api_key=os.environ.get('OPENAI_API_KEY', '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')
+            api_key=os.environ.get('OPENAI_API_KEY', 'sk-ykdev-podcast-a25lvVpfRCo8iKZ5cMI9T3BlbkFJkCisrUMNCbGWbCOCPoB3')
         )
         
         system_prompt = """You are Jarvis, an AI assistant that converts natural language to Windows command line commands.
