@@ -1211,6 +1211,8 @@ const App = () => {
         
         {activeTab === 'batch' && renderBatchTab()}
         {activeTab === 'automation' && renderAutomationTab()}
+        {activeTab === 'screen' && renderScreenAutomationTab()}
+        {activeTab === 'advanced' && renderAdvancedAutomationTab()}
         
         {/* Output Display */}
         <div className="output-display">
