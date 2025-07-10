@@ -1134,7 +1134,7 @@ const App = () => {
       <div className="jarvis-header">
         <div className="jarvis-title">
           <div className="jarvis-logo">🤖</div>
-          <h1>JARVIS AI Assistant</h1>
+          <h1>Shayak AI Assistant</h1>
           <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
             {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
           </div>
