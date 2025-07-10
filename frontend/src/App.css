@@ -930,6 +930,26 @@ body::after {
 
 .output-text {
   background: rgba(0, 0, 0, 0.8);
+
+.output-text::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(0, 212, 255, 0.02) 50%, 
+    transparent 100%);
+  animation: textGlow 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes textGlow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
   border: 1px solid rgba(0, 212, 255, 0.2);
   border-radius: 15px;
   padding: 1.5rem;
