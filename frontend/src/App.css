@@ -605,93 +605,80 @@ body::after {
   font-style: italic;
 }
 
-/* Batch Interface */
-.batch-interface {
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid #00d4ff;
-  border-radius: 15px;
-  padding: 2rem;
-  backdrop-filter: blur(10px);
-}
-
+/* Enhanced Batch Interface */
 .batch-controls {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-}
-
-.batch-name {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.batch-name label {
-  color: #00d4ff;
-  font-weight: 600;
-}
-
-.batch-name input {
-  padding: 0.8rem;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid #333;
-  border-radius: 8px;
-  color: #ffffff;
-  font-size: 1rem;
-}
-
-.batch-commands {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.batch-commands label {
-  color: #00d4ff;
-  font-weight: 600;
+  gap: 2rem;
 }
 
 .batch-command-row {
   display: flex;
   gap: 1rem;
   align-items: center;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .batch-command-row input {
   flex: 1;
-  padding: 0.8rem;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid #333;
-  border-radius: 8px;
-  color: #ffffff;
-  font-size: 1rem;
+}
+
+/* Enhanced Buttons */
+.remove-btn, .add-btn, .execute-batch-btn, .execute-template-btn, .automation-btn, .clear-btn, .refresh-btn {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
 }
 
 .remove-btn {
-  background: #ff4757;
-  border: none;
+  background: linear-gradient(45deg, #ff4757, #ff3838);
   color: white;
-  padding: 0.5rem;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
+  padding: 0.7rem 1rem;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+}
+
+.remove-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(255, 71, 87, 0.5);
 }
 
 .add-btn {
-  background: #2ed573;
-  border: none;
+  background: linear-gradient(45deg, #2ed573, #00ff7f);
   color: white;
-  padding: 0.8rem 1.5rem;
-  border-radius: 8px;
-  cursor: pointer;
+  padding: 1rem 2rem;
   font-size: 1rem;
-  font-weight: 600;
   align-self: flex-start;
+  box-shadow: 0 4px 15px rgba(46, 213, 115, 0.3);
 }
 
-.execute-batch-btn {
-  background: linear-gradient(45deg, #00d4ff, #0066cc);
-  border: none;
+.add-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(46, 213, 115, 0.5);
+}
+
+.execute-batch-btn, .execute-template-btn, .automation-btn {
+  background: linear-gradient(45deg, #00d4ff, #0066cc, #00ff7f);
+  background-size: 300% 300%;
   color: white;
   padding: 1rem 2rem;
   border-radius: 10px;
