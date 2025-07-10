@@ -30,7 +30,7 @@ except Exception as e:
     from backend.mock_automation import automation
 
 # Initialize FastAPI app
-app = FastAPI(title="Jarvis AI Assistant", version="1.0.0")
+app = FastAPI(title="Shayak AI Assistant", version="1.0.0")
 
 # CORS middleware
 app.add_middleware(
