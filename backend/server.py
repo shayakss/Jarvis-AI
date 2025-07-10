@@ -425,7 +425,7 @@ def interpret_natural_language_to_command(natural_language: str) -> Dict:
             api_key=os.environ.get('OPENAI_API_KEY', 'sk-svcacct-xgoMM56QqYTdn0kcH46aT3BlbkFJJ5dEMVrwoNjH2IgkGIfA')
         )
         
-        system_prompt = """You are Jarvis, an AI assistant that converts natural language to command line commands.
+        system_prompt = """You are Shayak, an AI assistant that converts natural language to command line commands.
 
 IMPORTANT RULES:
 1. Only return commands that are SAFE and from this whitelist: ls, dir, mkdir, cp, mv, rm, cd, pwd, uname, ps, ifconfig, date, whoami, hostname, uptime, free, df, top, echo, ping, help, clear, tree, find, grep, cat, head, tail, which, history, env
