@@ -456,7 +456,7 @@ class ScreenAutomation:
                 "timestamp": datetime.now().isoformat()
             }
     
-    def start_wake_word_detection(self, wake_word="jarvis") -> Dict:
+    def start_wake_word_detection(self, wake_word="shayak") -> Dict:
         """Start wake word detection in background"""
         try:
             def wake_word_listener():
