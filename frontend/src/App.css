@@ -967,11 +967,12 @@ body::after {
   position: relative;
 }
 
-/* Control Buttons */
+/* Enhanced Control Buttons */
 .control-buttons {
   display: flex;
-  gap: 1rem;
+  gap: 1.5rem;
   justify-content: center;
+  margin-top: 2rem;
 }
 
 .clear-btn,
