@@ -227,4 +227,4 @@ Your Shayak AI Assistant is ready to transform your workflow with futuristic aut
 
 ---
 
-*Made with ❤️ and powered by AI*
+*Made with ❤️ and powered by SHAYAK SIRAJ*
