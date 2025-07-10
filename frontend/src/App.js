@@ -675,7 +675,7 @@ const App = () => {
       setIsProcessing(true);
       const endpoint = isWakeWordActive ? '/api/automation/wake-word/stop' : '/api/automation/wake-word/start';
       const method = 'POST';
-      const body = isWakeWordActive ? {} : { wake_word: 'jarvis' };
+      const body = isWakeWordActive ? {} : { wake_word: 'shayak' };
       
       const response = await fetch(`${BACKEND_URL}${endpoint}`, {
         method,
