@@ -45,7 +45,7 @@ app.add_middleware(
 try:
     mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017/')
     client = MongoClient(mongo_url)
-    db = client.jarvis_ai
+    db = client.shayak_ai
     commands_collection = db.commands
     history_collection = db.command_history
     batch_collection = db.batch_commands
