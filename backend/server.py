@@ -477,7 +477,7 @@ User request: """ + natural_language
 
 @app.get("/api/")
 async def root():
-    return {"message": "Jarvis AI Assistant Backend is running"}
+    return {"message": "Shayak AI Assistant Backend is running"}
 
 @app.get("/api/health")
 async def health_check():
