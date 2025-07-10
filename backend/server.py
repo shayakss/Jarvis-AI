@@ -117,7 +117,7 @@ class HotkeyRequest(BaseModel):
     action: str
 
 class WakeWordRequest(BaseModel):
-    wake_word: str = "jarvis"
+    wake_word: str = "shayak"
 
 class CommandExecutionRequest(BaseModel):
     natural_language: str
