@@ -58,7 +58,7 @@ const App = () => {
   const analyserRef = useRef(null);
   const animationFrameRef = useRef(null);
   
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+  const BACKEND_URL = 'https://9fa57c9a-db97-4308-9e5a-62a1b1c54384.preview.emergentagent.com';
 
   // Initialize app and check connection
   useEffect(() => {
