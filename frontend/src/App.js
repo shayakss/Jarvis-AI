@@ -557,6 +557,32 @@ const App = () => {
   // AUTOMATION FUNCTIONS
   // ============================================
 
+  const handleQuickAction = async (action) => {
+    setIsProcessing(true);
+    try {
+      switch (action) {
+        case 'screenshot':
+          await takeScreenshot();
+          break;
+        case 'health':
+          await checkConnection();
+          break;
+        case 'voice':
+          setActiveTab('voice');
+          break;
+        case 'batch':
+          setActiveTab('batch');
+          break;
+        default:
+          break;
+      }
+    } catch (error) {
+      console.error('Quick action failed:', error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const takeScreenshot = async () => {
     try {
       setIsProcessing(true);
