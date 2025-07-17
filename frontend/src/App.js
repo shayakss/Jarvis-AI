@@ -866,10 +866,6 @@ const App = () => {
     setBatchCommands(newCommands);
   };
 
-  const formatTimestamp = (timestamp) => {
-    return new Date(timestamp).toLocaleString();
-  };
-
   const renderVoiceTab = () => (
     <div className="voice-interface">
       <div className="voice-controls">
