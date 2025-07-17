@@ -17,6 +17,26 @@ const App = () => {
   const [batchCommands, setBatchCommands] = useState(['']);
   const [batchName, setBatchName] = useState('');
   
+  // Dashboard state
+  const [systemStats, setSystemStats] = useState({
+    cpu: 0,
+    memory: 0,
+    disk: 0,
+    uptime: '0:00:00',
+    activeConnections: 0,
+    tasksCompleted: 0,
+    tasksQueue: 0,
+    automationStatus: 'idle'
+  });
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [performanceData, setPerformanceData] = useState([]);
+  const [quickActions, setQuickActions] = useState([
+    { id: 1, name: 'Take Screenshot', icon: '📸', action: 'screenshot' },
+    { id: 2, name: 'System Check', icon: '🔍', action: 'health' },
+    { id: 3, name: 'Voice Command', icon: '🎤', action: 'voice' },
+    { id: 4, name: 'Batch Execute', icon: '⚡', action: 'batch' }
+  ]);
+  
   // Automation state
   const [automationStatus, setAutomationStatus] = useState({});
   const [screenshot, setScreenshot] = useState(null);
