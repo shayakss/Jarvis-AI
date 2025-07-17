@@ -1304,6 +1304,110 @@ const App = () => {
       {/* Main Interface */}
       <div className="jarvis-main">
         {/* Tab Content */}
+        {activeTab === 'dashboard' && (
+          <div className="dashboard-interface">
+            <div className="dashboard-grid">
+              {/* System Stats */}
+              <div className="dashboard-card">
+                <h3>📊 System Statistics</h3>
+                <div className="stats-grid">
+                  <div className="stat-item">
+                    <span className="stat-label">CPU Usage:</span>
+                    <span className="stat-value">{systemStats.cpu}%</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Memory:</span>
+                    <span className="stat-value">{systemStats.memory}%</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Disk:</span>
+                    <span className="stat-value">{systemStats.disk}%</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Uptime:</span>
+                    <span className="stat-value">{systemStats.uptime}</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Active Connections:</span>
+                    <span className="stat-value">{systemStats.activeConnections}</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Tasks Completed:</span>
+                    <span className="stat-value">{systemStats.tasksCompleted}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="dashboard-card">
+                <h3>⚡ Quick Actions</h3>
+                <div className="quick-actions-grid">
+                  {quickActions.map((action) => (
+                    <button
+                      key={action.id}
+                      className="quick-action-btn"
+                      onClick={() => handleQuickAction(action.action)}
+                      disabled={isProcessing}
+                    >
+                      <span className="action-icon">{action.icon}</span>
+                      <span className="action-name">{action.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recent Activity */}
+              <div className="dashboard-card">
+                <h3>📋 Recent Activity</h3>
+                <div className="activity-list">
+                  {recentActivity.map((activity) => (
+                    <div key={activity.id} className="activity-item">
+                      <div className="activity-type">
+                        {activity.type === 'command' ? '⌨️' : '📦'}
+                      </div>
+                      <div className="activity-details">
+                        <div className="activity-description">{activity.description}</div>
+                        <div className="activity-timestamp">{formatTimestamp(activity.timestamp)}</div>
+                      </div>
+                      <div className={`activity-status ${activity.status}`}>
+                        {activity.status === 'success' ? '✅' : '❌'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Performance Chart */}
+              <div className="dashboard-card">
+                <h3>📈 Performance Trends</h3>
+                <div className="performance-chart">
+                  {performanceData.length > 0 ? (
+                    <div className="chart-container">
+                      <div className="chart-legend">
+                        <span className="legend-item cpu">CPU</span>
+                        <span className="legend-item memory">Memory</span>
+                        <span className="legend-item disk">Disk</span>
+                      </div>
+                      <div className="chart-data">
+                        {performanceData.slice(-10).map((data, index) => (
+                          <div key={index} className="chart-bar">
+                            <div className="bar cpu" style={{height: `${data.cpu}%`}}></div>
+                            <div className="bar memory" style={{height: `${data.memory}%`}}></div>
+                            <div className="bar disk" style={{height: `${data.disk}%`}}></div>
+                            <div className="bar-label">{data.timestamp.split(':').slice(0,2).join(':')}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="no-data">No performance data available</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {activeTab === 'voice' && renderVoiceTab()}
         
         {activeTab === 'manual' && (
