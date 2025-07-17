@@ -97,6 +97,14 @@ const App = () => {
     }
   };
 
+  const formatTimestamp = (timestamp) => {
+    try {
+      return new Date(timestamp).toLocaleString();
+    } catch (error) {
+      return timestamp;
+    }
+  };
+
   const loadDashboardData = async () => {
     try {
       // Load system health
