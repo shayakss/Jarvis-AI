@@ -10,7 +10,7 @@ class JarvisAPITester(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(JarvisAPITester, self).__init__(*args, **kwargs)
         # Use the public endpoint from frontend/.env
-        self.base_url = "https://3b24b978-1e61-45d3-8632-69d6c1f99537.preview.emergentagent.com"
+        self.base_url = "https://9fa57c9a-db97-4308-9e5a-62a1b1c54384.preview.emergentagent.com"
         self.api_url = f"{self.base_url}/api"
         self.tests_run = 0
         self.tests_passed = 0
