@@ -13,7 +13,7 @@ const App = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [safeCommands, setSafeCommands] = useState({});
   const [automationTemplates, setAutomationTemplates] = useState({});
-  const [activeTab, setActiveTab] = useState('voice');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [batchCommands, setBatchCommands] = useState(['']);
   const [batchName, setBatchName] = useState('');
   
