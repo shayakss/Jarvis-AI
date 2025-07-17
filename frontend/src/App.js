@@ -1258,6 +1258,12 @@ const App = () => {
       {/* Tab Navigation */}
       <div className="tab-navigation">
         <button 
+          className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
+          onClick={() => setActiveTab('dashboard')}
+        >
+          📊 Dashboard
+        </button>
+        <button 
           className={`tab-btn ${activeTab === 'voice' ? 'active' : ''}`}
           onClick={() => setActiveTab('voice')}
         >
