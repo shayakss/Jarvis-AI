@@ -69,11 +69,20 @@ const App = () => {
     loadAutomationTemplates();
     loadAutomationStatus();
     loadWindowList();
+    loadDashboardData();
+    
+    // Auto-refresh dashboard data every 5 seconds
+    const dashboardInterval = setInterval(() => {
+      if (activeTab === 'dashboard') {
+        loadDashboardData();
+      }
+    }, 5000);
     
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      clearInterval(dashboardInterval);
     };
   }, []);
 
