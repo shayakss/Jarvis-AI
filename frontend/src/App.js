@@ -97,6 +97,65 @@ const App = () => {
     }
   };
 
+  const loadDashboardData = async () => {
+    try {
+      // Load system health
+      const healthResponse = await fetch(`${BACKEND_URL}/api/health`);
+      const healthData = await healthResponse.json();
+      
+      // Load automation status
+      const automationResponse = await fetch(`${BACKEND_URL}/api/automation/status`);
+      const automationData = await automationResponse.json();
+      
+      // Simulate system metrics (in a real app, you'd get these from system APIs)
+      const mockStats = {
+        cpu: Math.floor(Math.random() * 100),
+        memory: Math.floor(Math.random() * 100),
+        disk: Math.floor(Math.random() * 100),
+        uptime: '2:34:17',
+        activeConnections: commandHistory.length,
+        tasksCompleted: commandHistory.filter(cmd => cmd.success).length,
+        tasksQueue: batchHistory.length,
+        automationStatus: automationData.success ? 'active' : 'idle'
+      };
+      
+      setSystemStats(mockStats);
+      
+      // Update recent activity
+      const recentActivities = [
+        ...commandHistory.slice(-5).map(cmd => ({
+          id: cmd.id,
+          type: 'command',
+          description: `Executed: ${cmd.command}`,
+          timestamp: cmd.timestamp,
+          status: cmd.success ? 'success' : 'error'
+        })),
+        ...batchHistory.slice(-3).map(batch => ({
+          id: batch.id,
+          type: 'batch',
+          description: `Batch: ${batch.name}`,
+          timestamp: batch.timestamp,
+          status: batch.successful_commands > 0 ? 'success' : 'error'
+        }))
+      ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 8);
+      
+      setRecentActivity(recentActivities);
+      
+      // Update performance data for charts
+      const newPerformanceData = performanceData.slice(-19);
+      newPerformanceData.push({
+        timestamp: new Date().toLocaleTimeString(),
+        cpu: mockStats.cpu,
+        memory: mockStats.memory,
+        disk: mockStats.disk
+      });
+      setPerformanceData(newPerformanceData);
+      
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+    }
+  };
+
   const loadSafeCommands = async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/safe-commands`);
